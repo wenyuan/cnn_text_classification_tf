@@ -13,9 +13,12 @@ class TextCNN(object):
       embedding_size, filter_sizes, num_filters, l2_reg_lambda=0.0):  # 把train.py中TextCNN里定义的参数传进来
 
         # Placeholders for input, output and dropout
-        self.input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")  # input_x输入语料,待训练的内容,维度是sequence_length,"N个词构成的N维向量"
-        self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")  # input_y输入语料,待训练的内容标签,维度是num_classes,"正面 || 负面"
-        self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")  # dropout_keep_prob dropout参数,防止过拟合,训练时用
+        # input_x输入语料，待训练的内容，维度是sequence_length，"N个词构成的N维向量"
+        self.input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")
+        # input_y输入语料,待训练的内容标签,维度是num_classes,"正面 || 负面"
+        self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
+        # dropout_keep_prob dropout参数,防止过拟合,训练时用
+        self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)  # 先不用，写0
@@ -28,7 +31,8 @@ class TextCNN(object):
                 tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
                 name="W")  # 定义W并初始化
             self.embedded_chars = tf.nn.embedding_lookup(self.W, self.input_x)
-            self.embedded_chars_expanded = tf.expand_dims(self.embedded_chars, -1)  # 加一个维度，转换为4维的格式
+            # 增加维度，转换为4维的格式，-1代表的是最后一维，这边主要是维护最后一维的通道数，图像是none×x×y×chanel的
+            self.embedded_chars_expanded = tf.expand_dims(self.embedded_chars, -1)
 
         # Create a convolution + maxpool layer for each filter size
         pooled_outputs = []
@@ -36,9 +40,12 @@ class TextCNN(object):
         for i, filter_size in enumerate(filter_sizes):
             with tf.name_scope("conv-maxpool-%s" % filter_size):
                 # Convolution Layer
-                filter_shape = [filter_size, embedding_size, 1, num_filters]  # 4个参数分别为filter_size高h，embedding_size宽w，channel为1，filter个数
-                W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="W")  # W进行高斯初始化
-                b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="b")  # b给初始化为一个常量
+                # 前两个是卷积的长和宽，第三个是通道数，最后一个就是输出的通道数，其实就是filter的数目
+                filter_shape = [filter_size, embedding_size, 1, num_filters]
+                # W进行高斯初始化
+                W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="W")
+                # b给初始化为一个常量
+                b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="b")
                 conv = tf.nn.conv2d(
                     self.embedded_chars_expanded,
                     W,
@@ -46,11 +53,11 @@ class TextCNN(object):
                     padding="VALID",  # 这里不需要padding
                     name="conv")
                 # Apply nonlinearity 激活函数
-                # 可以理解为,正面或者负面评价有一些标志词汇,这些词汇概率被增强，即一旦出现这些词汇,倾向性分类进正或负面评价,
-                # 该激励函数可加快学习进度，增加稀疏性,因为让确定的事情更确定,噪声的影响就降到了最低。
+                # 可以理解为,正面或者负面评价有一些标志词汇，这些词汇概率被增强，即一旦出现这些词汇，倾向性分类进正或负面评价。
+                # 该激励函数可加快学习进度，增加稀疏性，因为让确定的事情更确定，噪声的影响就降到了最低。
                 h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
                 # Maxpooling over the outputs
-                # 池化
+                # 池化，主要是第二个和第三个参数
                 pooled = tf.nn.max_pool(
                     h,
                     ksize=[1, sequence_length - filter_size + 1, 1, 1],  # (h-filter+2padding)/strides+1=h-f+1
@@ -61,8 +68,10 @@ class TextCNN(object):
 
         # Combine all the pooled features
         num_filters_total = num_filters * len(filter_sizes)
+        # 以第四维来拼接这个张量
         self.h_pool = tf.concat(pooled_outputs, 3)
-        self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total])  # 扁平化数据，跟全连接层相连
+        # 扁平化数据，跟全连接层相连
+        self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total])
 
         # Add dropout
         # drop层,防止过拟合,参数为dropout_keep_prob
@@ -77,7 +86,8 @@ class TextCNN(object):
             W = tf.get_variable(
                 "W",
                 shape=[num_filters_total, num_classes],  # 前面连扁平化后的池化操作
-                initializer=tf.contrib.layers.xavier_initializer())  # 定义初始化方式
+                initializer=tf.contrib.layers.xavier_initializer()
+            )  # 定义初始化方式
             b = tf.Variable(tf.constant(0.1, shape=[num_classes]), name="b")
             # 损失函数导入
             l2_loss += tf.nn.l2_loss(W)

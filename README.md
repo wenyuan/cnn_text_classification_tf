@@ -2,7 +2,7 @@
 > TensorFlow中使用CNN实现英文文本分类（代码注释）
 
 Forked from [dennybritz/cnn-text-classification-tf](https://github.com/dennybritz/cnn-text-classification-tf)
-主要是解读以上开源项目，详情可以参见[CNN实现英文文本分类](www.wenyuanblog.com)
+主要是解读以上开源项目，详情可以参见[CNN实现英文文本分类](https://www.wenyuanblog.com/blogs/tensorflow-cnn-english-text-classification-implement.html)
 
 
 ## Requirements
@@ -61,5 +61,5 @@ Train:
 ./eval.py --eval_train --checkpoint_dir="./runs/1459637919/checkpoints/"
 ```
 
-Replace the checkpoint dir with the output from the training. To use your own data, change the `eval.py` script to load your data.
+Replace the checkpoint dir with the output from the training. To use your own data, change the `eval.py` script to load your data.<br/>
 用训练输出的目录替换检查点（checkpoint）目录。如果要使用自己的数据，就更改`eval.py`中的 **checkpoint_dir** 参数。

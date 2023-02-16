@@ -2,7 +2,7 @@
 > TensorFlow中使用CNN实现英文文本分类（代码注释）
 
 Forked from [dennybritz/cnn-text-classification-tf](https://github.com/dennybritz/cnn-text-classification-tf)
-主要是解读以上开源项目，详情可以参见[CNN实现英文文本分类](https://www.wenyuanblog.com/blogs/tensorflow-cnn-english-text-classification-implement.html)
+主要是解读以上开源项目.
 
 
 ## Requirements
